@@ -1,0 +1,120 @@
+<html>
+<head>
+	<title>Login</title>
+	<script src="jquery.js"> </script>
+	<script src="register.js"> </script>
+	<style>
+	/*contenitore in cima dove c'è scritto "Login"*/
+.pre_contenitore{
+	  width:40%;
+	  margin:auto;
+	  height:50px;
+	  border:1px solid black;
+	  border-radius: 40px 40px 0px 0px;
+	   background-color:rgba(0,0,0,0.9);
+	   box-shadow: 20px 30px 20px #000000;
+	   padding:20px;
+}
+
+.pre_contenitore p{
+     color:white;
+     text-align: center;
+     font-size: 1.9em;
+     font-family: arial;
+    line-height:2px;
+
+}
+
+
+body{
+	background-image: url("https://i1.wp.com/www.deteched.com/wp-content/uploads/2017/10/Space-Vortex-4K-Abstract-Wallpapers.jpg");
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	background-size: cover;
+	text-align: center;
+}
+
+/*contenitore contenete il form */
+
+.contenitore {
+	  border:1px solid black;
+	  margin:auto;
+	  width: 40%;
+	  height: 83%;
+      border-radius: 0px 0px 40px 40px;
+      padding:20px;
+      background-color:rgba(0,0,0,0.8);
+      box-shadow: 20px 20px 20px #000000;
+     
+      color:white;
+
+}
+
+.contenitore input{
+    width: 80%;
+    margin-bottom: 20px;
+    border:none;
+    border:1px solid black;
+    height: 30px;
+
+}
+.contenitore input[type="text"], input[type="password"] /* i css si riferiscono solo alla barra ditesto */
+{
+    border: none;
+    border-bottom: 1px solid #fff;
+    background: transparent;
+    outline: none;
+    height: 7%;
+    color: #fff;
+    font-size: 16px;
+}
+.contenitore input[type="button"]{  /* i css si riferiscono solo al pulsante */
+	border-radius: 14px;
+	height: 7%;
+}
+.contenitore input[type="checkbox"]{
+	display: inline-block;
+	width: 25%;
+	height: 4%;
+}
+.contenitore label{
+	display: inline-block;
+}
+
+.contenitore input[type="button"]:hover {
+	background: lightblue;
+}
+    </style>
+</head>
+	<body>
+
+        <div class="pre_contenitore">
+			<p>Login</p>
+		</div>
+		<div class="contenitore">
+				<p>Inserisci le tue credenziali</p>
+					<p>
+						<label>Username</label><br>
+							<input type="text" id="username" class="username" placeholder="Username">
+					</p>
+					<p>
+						<label>Password</label><br>
+							<input type="Password" id="password" class="password" placeholder="Password">
+					</p>
+					<p>
+							<label>Data di nascita</label><br>
+								<input type="text" id="dataNascita" class="username" placeholder="Data di nascita">
+						</p>
+							<p>
+								<label>Scegli le tue preferenze:</label><br>
+								<label class="lbl">Tom Clancy's Rainbow Six Siege</label><input type="checkbox" class="ckPreferenze"> <br>	
+								<label class="lbl">Fortnite</label><input type="checkbox" class="ckPreferenze"><br>
+								<label class="lbl">Fifa21</label><input type="checkbox" class="ckPreferenze"><br>
+								<label class="lbl">Call of Duty: Warzone</label><input type="checkbox" class="ckPreferenze"> <br>	
+								<label class="lbl">Counter-Strike: Global Offensive</label><input type="checkbox" class="ckPreferenze"><br>
+							</p>
+								<input type="button" id="btn" value="Registrati">
+		</div>
+							
+	</body>
+</html>
