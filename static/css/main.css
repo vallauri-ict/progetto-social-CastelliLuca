@@ -1,16 +1,48 @@
 @import url(http://fonts.googleapis.com/css?family=Roboto:700,400,100);
 html{
-	height:100%;
-	width:100%;
+ height:100%;
+ width:100%;
 }
-
-body {
+body{
   font-family: 'Roboto', sans-serif;
   color: #666;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 400;
   background: #fff;
   height:100%;
+}
+#home{
+  padding-top: 8%;
+}
+.container{
+  overflow:auto;
+  height: 110%;
+}
+::-webkit-scrollbar {
+  width: 0px; 
+  }
+#title{
+ background:linear-gradient(90deg, rgba(110, 110, 117,1) 5%, rgba(51, 51, 56,1) 25%, rgba(21, 21, 23,1) 75%);
+ border-radius:10px;
+ text-align:center;
+ font-weight:bolder;
+ padding: 2%;
+ margin-bottom: 2%;
+}
+.divDinamico{
+ background:linear-gradient(90deg, rgba(21, 21, 23,1) 5%, rgba(51, 51, 56,1) 25%, rgba(110, 110, 117,1) 75%);
+ border-radius:20px;
+ text-align:left;
+ padding:2%;
+ margin-bottom:1%;
+ 
+}	
+#messaggi{
+  position: fixed;
+  text-align: center;
+  bottom: 0;
+  width: 65%;
+  margin-bottom: 7%;
 }
 .btn {
   font-size: 14px;
@@ -178,7 +210,6 @@ a:focus {
   height: 50px;
   width: 50px;
   font-size: 24px;
-  background-image: url("img/home.jpg");
   background-size: contain;
 }
 .logo-left i {
@@ -693,9 +724,6 @@ a:focus {
 }
 #clients .client-item-wrapper {
   text-align: center;
-}
-#contact {
-  background: #ecf0f1;
 }
 #contact .info {
   padding: 15px 0;

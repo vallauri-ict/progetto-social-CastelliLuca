@@ -19,6 +19,18 @@
     <link href="css/animate.min.css" rel="stylesheet">
   </head>
 
+  <style type="text/css">
+    h1{text-align:center}
+    
+    /* queste classi sono usate dalla funzione visualizza() */
+    .message-data {
+      font-weight: bold;
+    }
+    .message-from {
+      font-style: italic;
+    }						
+  </style>
+
   <body>
 
     <div class="navbar navbar-invers menu-wrap">
@@ -50,6 +62,17 @@
             </div>
         </div>        
         <div class="contents text-right" id="wrapper">
+          
+          </div>
+          <div class="row"  id="messaggi" style="display: none;">
+            <div class="col-sm-6">
+              <input type="email" class="form-control" id="txtMessage" placeholder="Inserisci qui il tuo messaggio">
+            </div>
+            <div class="col-sm-6">
+              <button class="	btn btn-primary"id="btnInviaMessaggio">Invia</button>
+              <button class="	btn btn-primary"id="btnDisconnetti">Disconnetti</button>
+            </div>
+          </div>
         </div>   
     </header>
 		
@@ -68,7 +91,7 @@
     <script src="js/smooth-on-scroll.js"></script>
     <script src="js/smooth-scroll.js"></script>
     <script src="js/main.js"></script>
-
+    <script type="application/javascript" src="socket.io.js"></script>
     
 
 

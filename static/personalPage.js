@@ -12,7 +12,7 @@ $(document).ready(function() {
     wrapper=$("#wrapper");
     navbar=$("#navbar");
 
-
+    wrapper.prop("class","divDinamico");
     let li=$("<li>");
     let a=$("<a>");
     a.prop("href","richiesta.html").html("Richiesta Mod");
@@ -54,8 +54,7 @@ $(document).ready(function() {
             admin="yes";
         else
             admin="no";
-    });
-
+        
     if(page=="info")
     {
         let div=$("<div>");
@@ -69,6 +68,7 @@ $(document).ready(function() {
             wrapper.append(div);
             div=$("<div>");
             div.html("Data di nascita: "+data["dataNascita"]);
+            
             wrapper.append(div);
             let request = inviaRichiesta("get","/api/elencoPreferenze");
             request.fail(errore);
@@ -112,6 +112,8 @@ $(document).ready(function() {
                         chk.prop("type","radio");
                         chk.prop("name","chk");
                         divPreferenze.append(chk);
+                        let br=$("<br>");
+                        divPreferenze.append(br);
                     }
                 }
                 divPreferenze.hide();
@@ -188,6 +190,8 @@ $(document).ready(function() {
             });
         }
     }
+    });
+
 
     wrapper.on("click","div",function(){
         if($(this).prop("id")=="btnAddPreferenze")

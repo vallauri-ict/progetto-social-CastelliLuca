@@ -1,3 +1,14 @@
+@import url(http://fonts.googleapis.com/css?family=Roboto:700,400,100);
+html{
+ height:100%;
+ width:100%;
+ background-image: url("img/back.jpg");
+ background-size:cover;
+}
+body{
+	background-color: #2c2d28;
+	background-color: transparent;
+}
 .titolo{
 	font-size:15pt;
 	font-weight:bold;

@@ -17,16 +17,95 @@ let currentGame="";
 let currentMod="Wiki";
 const PORT=process.env.PORT || 1337;
 const TTL_Token = 1000; //espresso in sec 
-const DBNAME="Gaming";
-
+const DBNAME="Gaming";	
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { compileFunction } = require('vm');
+let users = [];
 
 const server=http.createServer(app);
+const io = require('socket.io')(server);
+
+app.use("/",express.static("./static"));
+
 server.listen(PORT, function() {
     console.log("Server in ascolto sulla porta "+PORT);
+
+    // connessione di un client
+	// viene inettato 'socket' contenente IP e PORT del client
+	// Ogni utente ha un suo evento connection con le sue variabili private,
+	// fra cui la variabile user che contiane le info dell'utente corrente
+	io.on('connection', function (socket) {
+        console.log("connecting");
+		//let param = socket.handshake.query.paramName;
+		let user = {};
+				
+		// 1) ricezione username
+		socket.on('username', function (username) {
+			
+			if(findUser(username) != null)
+			{
+				socket.emit("userNOK", "");
+				return;
+			}
+			
+			user.username = username;
+			user.socket=socket;
+			users.push(user);	
+			log(' User ' + colors.yellow(user.username) + ' (sockID= ' + colors.yellow(this.id) + ")");
+			
+			this.join(currentGame); // consente di inserire un utente in una stanza dal nome arbitrario
+		});
+
+
+    	// 2) ricezione di un messaggio	 
+		socket.on('message', function (data) {
+			log(' User ' + colors.yellow(user.username) + ' (sockID= ' + colors.yellow(this.id) + ")");
+			
+			let response=JSON.stringify({
+				'from': user.username,	 
+				'message': data,			 
+				'date': new Date()	 
+			});
+
+		    io.to(currentGame).emit("notify_message", response);
+
+			// notifico a tutti i socket (compreso il mittente) il messaggio appena ricevuto 
+			//io.sockets.emit('notify_message', response);				
+		});
+		 
+		// 3) user disconnected
+		socket.on('disconnect', function () {
+			let item=findUser(user.username);
+			if(item)
+			{
+				users.splice(users.indexOf(item), 1);
+				log(' User ' + user.username + ' disconnected!');
+			}
+			
+        });
+        
+        socket.on("userNOK", function(data){
+            if(confirm("Sei già connesso ad un'altra chat<br>Vuoi disconnetterti e riconnetterti a questa?"))
+            {
+                socket.disconnect();
+                socket.emit("username", username);
+            }
+		});
+    });
     init();
 });
+
+function log(data) {
+    console.log(colors.cyan("[" + new Date().toLocaleTimeString() + "]") + ": " + data);
+}
+
+function findUser(username)
+{
+	return users.find(function(item){ 
+		return (item.username==username)
+	});
+}
 
 let paginaErrore="";
 let privateKey;
@@ -306,6 +385,23 @@ app.get('/api/forum', function (req, res, next) {
     });
 });
 
+app.get('/api/mod', function (req, res, next) {
+    mongoClient.connect(CONNECTIONSTRING,CONNECTIONOPTIONS,function(err,client){
+        if(err){
+            res.status(503).send("Errore di connessione al db");
+        }else{
+            let db=client.db("Gaming");
+            let collection=db.collection("Mod");
+            collection.find({$and:[{"Username":currentUser},{"Gioco":currentGame}]}).toArray(function(err,data){
+                if(err)
+                    res.status(500).send("Errore di esecuzione query");
+                else
+                    res.send(data);
+            });
+        }
+    });
+});
+
 app.get('/api/Accept', function (req, res, next) {
     mongoClient.connect(CONNECTIONSTRING,CONNECTIONOPTIONS,function(err,client){
         if(err){
@@ -314,6 +410,60 @@ app.get('/api/Accept', function (req, res, next) {
             let db=client.db("Gaming");
             let collection=db.collection("Accepted");
             collection.insertOne({"Host":req.query.user,"Client":currentUser},function(err,data){
+                if(err)
+                    res.status(500).send("Errore di esecuzione query");
+                else
+                    res.send(data);
+            });
+        }
+    });
+});
+
+app.get('/api/addForum', function (req, res, next) {
+    mongoClient.connect(CONNECTIONSTRING,CONNECTIONOPTIONS,function(err,client){
+        if(err){
+            res.status(503).send("Errore di connessione al db");
+        }else{
+            let db=client.db("Gaming");
+            let collection=db.collection("Forum");
+            let par=req.query.par.split(';');
+            collection.insertOne({"Testo":par[2],"Mittente":currentUser,"Data":par[0],"Ora":par[1],"Gioco":currentGame},function(err,data){
+                if(err)
+                    res.status(500).send("Errore di esecuzione query");
+                else
+                    res.send(data);
+            });
+        }
+    });
+});
+
+app.get('/api/addNews', function (req, res, next) {
+    mongoClient.connect(CONNECTIONSTRING,CONNECTIONOPTIONS,function(err,client){
+        if(err){
+            res.status(503).send("Errore di connessione al db");
+        }else{
+            let db=client.db("Gaming");
+            let collection=db.collection("News");
+            let par=req.query.par.split(';');
+            collection.insertOne({"Testo":par[2],"Gioco":currentGame,"Data":par[0],"Ora":par[1]},function(err,data){
+                if(err)
+                    res.status(500).send("Errore di esecuzione query");
+                else
+                    res.send(data);
+            });
+        }
+    });
+});
+
+app.get('/api/addEsports', function (req, res, next) {
+    mongoClient.connect(CONNECTIONSTRING,CONNECTIONOPTIONS,function(err,client){
+        if(err){
+            res.status(503).send("Errore di connessione al db");
+        }else{
+            let db=client.db("Gaming");
+            let collection=db.collection("Esports");
+            let par=req.query.par.split(';');
+            collection.insertOne({"Testo":par[2],"Gioco":currentGame,"Data":par[0],"Ora":par[1]},function(err,data){
                 if(err)
                     res.status(500).send("Errore di esecuzione query");
                 else
@@ -674,7 +824,7 @@ app.get('/api/currentMod', function (req, res, next) {
     res.send(JSON.stringify({"ris":currentMod,"user":currentUser}));
 });
 
-app.use("/",express.static("./static"));
+
 
 app.use('/', function (req, res, next) {
     res.status(404);

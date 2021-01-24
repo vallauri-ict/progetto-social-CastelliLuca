@@ -12,10 +12,13 @@ let user;
 let navbar;
 let intervalLobby;
 let divLobby;
+let divMessaggi;
+let mod;
 
 $(document).ready(function() {
     user=$("#User");
     wrapper=$("#wrapper");
+    divMessaggi=$("#messaggi").hide();
     navbar=$("#navbar");
     divRichieste="";
     divRichiesta="";
@@ -80,6 +83,7 @@ $(document).ready(function() {
     let h1=$("<h1>");
     h1.html(game);
     h1.css({"text-align":"center","margin-top":"0"});
+    h1.prop("id","title");
     wrapper.append(h1);
     });
 
@@ -95,7 +99,7 @@ $(document).ready(function() {
     });
 
     
-    let mod;
+
     request = inviaRichiesta("get","/api/currentMod");
     request.fail(errore);
     request.done(function(data) {
@@ -112,12 +116,8 @@ $(document).ready(function() {
         request.done(function(data) {
             console.log(data);
             div=$("<div>");
-            div.html("Pubblicato nel: "+data["produzione"]);
-            div.prop("val",data["produzione"]);
-            wrapper.append(div);
-            div=$("<div>");
-            div.html(data["descrizione"]);
-            div.prop("val",data["descrizione"]);
+            div.prop("class","divDinamico");
+            div.html("Pubblicato nel: "+data["produzione"]+"<br>"+data["descrizione"]);
             wrapper.append(div);
         });
     }
@@ -135,10 +135,36 @@ $(document).ready(function() {
                 div.prop("val",data["Testo"]);
                 divNotizia.append(div);
                 div=$("<div>");
-                div.html("Pubblicato: "+data[i]["Data"]+" "+data[i]["Ora"]);
+                div.html(data[i]["Data"]+" "+data[i]["Ora"]);
                 divNotizia.append(div);
+                divNotizia.prop("class","divDinamico");
                 wrapper.append(divNotizia);
             }
+            request = inviaRichiesta("get","/api/infoUser");
+            request.fail(errore);
+            request.done(function(data) {
+                console.log(data);
+                user.html(data["Username"]);
+                if(data["ruolo"]=="admin")
+                {
+                    divMessaggi.show();
+                    $("#txtMessage").prop("placeholder","Aggiungi una notizia");
+                    $("#btnDisconnetti").hide();
+                }
+                else if(data["ruolo"]=="mod")
+                {
+                    request = inviaRichiesta("get","/api/mod");
+                    request.fail(errore);
+                    request.done(function(data) {
+                        if(data.length>0)
+                        {
+                            divMessaggi.show();
+                            $("#txtMessage").prop("placeholder","Aggiungi una notizia");
+                            $("#btnDisconnetti").hide();
+                        }
+                    });
+                }
+            });
             
         });
     }
@@ -151,18 +177,39 @@ $(document).ready(function() {
             for(let i=0;i<data.length;i++)
             {
                 let divNotizia=$("<div>");
-                //divNotizia.css("background","rgb(2,0,36)");
-                divNotizia.css({"background":"rgb(2,0,36)","background":"linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(25,207,209,1) 27%, rgba(0,212,255,1) 83%)","border-radius":"30px","text-align":"left","padding":"20px"});
                 let div=$("<div>");
-                let aus=data[i]["Testo"].replaceAll(".","<br>");
+                let aus=((data[i]["Testo"].replaceAll(".","<br>"))+"<br>"+" "+data[i]["Data"]+" "+data[i]["Ora"]);
                 div.html(aus);
                 divNotizia.append(div);
-                div=$("<div>");
-                div.html("Pubblicato: "+data[i]["Data"]+" "+data[i]["Ora"]);
-                divNotizia.append(div);
+                divNotizia.prop("class","divDinamico");
                 wrapper.append(divNotizia);
             }
-            
+            request = inviaRichiesta("get","/api/infoUser");
+            request.fail(errore);
+            request.done(function(data) {
+                console.log(data);
+                user.html(data["Username"]);
+                if(data["ruolo"]=="admin")
+                {
+                    divMessaggi.show();
+                    $("#txtMessage").prop("placeholder","Aggiungi una notizia");
+                    $("#btnDisconnetti").hide();
+                }
+                else if(data["ruolo"]=="mod")
+                {
+                    request = inviaRichiesta("get","/api/mod");
+                    request.fail(errore);
+                    request.done(function(data) {
+                        console.log(data);
+                        if(data.length>0)
+                        {
+                            divMessaggi.show();
+                            $("#txtMessage").prop("placeholder","Aggiungi una notizia");
+                            $("#btnDisconnetti").hide();
+                        }
+                    });
+                }
+            });
         });
     }
     else if(mod=="Forum")
@@ -171,6 +218,7 @@ $(document).ready(function() {
         request.fail(errore);
         request.done(function(data) {
             console.log(data);
+            divMessaggi.show();
             for(let i=0;i<data.length;i++)
             {
                 let divMessaggio=$("<div>");
@@ -179,9 +227,76 @@ $(document).ready(function() {
                 div.prop("val",data["Testo"]);
                 divMessaggio.append(div);
                 div=$("<div>");
-                div.html(data[i]["Mittente"]+" Pubblicato: "+data[i]["Data"]+" "+data[i]["Ora"]);
+                div.html(data[i]["Mittente"]+" "+data[i]["Data"]+" "+data[i]["Ora"]);
+                divMessaggio.prop("class","divDinamico");
                 divMessaggio.append(div);
                 wrapper.append(divMessaggio);
+            }
+
+            let username = user.html();
+            // io. connect è SINCRONO, cioè l'esecuzione rimane 
+            // bloccata finchè non arriva la risposta dal server
+            let socket = io.connect(); 
+            //let socket = io.connect("",{"query":"paramUrlencoded"});
+            console.log("socket: " + socket);
+            
+            socket.on('connect', function(){				
+                // 1) invio username
+                console.log("invio username");
+                socket.emit("username", username);
+                    
+                // 2) invio mesaggio
+                $("#btnInviaMessaggio").click(function () {
+                    let msg = $("#txtMessage").val();
+                    socket.emit("message", msg);
+                });
+                
+                // 3) disconnessione
+                $("#btnDisconnetti").click(function () {
+                    socket.disconnect();
+                });
+            });
+        
+            
+            socket.on('notify_message', function(data){
+                // ricezione di un messaggio dal server			
+                data = JSON.parse(data); 
+                visualizza(data.from, data.message, data.date);	
+            });
+            
+            socket.on('userNOK',function (data) {
+                alert("Nome già esistente. Scegliere un altro nome");
+                username=prompt("Inserisci lo username:");
+                socket.emit("username",username);
+            });
+            
+            socket.on('disconnect', function(){
+                alert("Sei stato disconnesso!");
+            });
+            
+        
+            
+            function visualizza (username, message, date) {
+                let wrapper = $("#wrapper")
+                let container = $("<div class='message-container'></div>");
+                container.appendTo(wrapper);
+                
+                // username e date
+                date = new Date(date); 				
+                let mittente = $("<small class='message-from'>" + username + " @" + date.toLocaleTimeString() + "</small>");
+                mittente.appendTo(container);
+            
+                // messaggio
+                message = $("<p class='message-data'>" + message + "</p>");
+                message.appendTo(container);
+                
+                
+                // auto-scroll dei messaggi
+                /* la proprietà html scrollHeight rappresenta l'altezza di wrapper oppure
+                   l'altezza del testo interno qualora questo ecceda l'altezza di wrapper */ 
+                let h = wrapper.get(0).scrollHeight; 
+                // fa scorrere il teso verso l'alto
+                wrapper.animate({scrollTop: h}, 500);
             }
         });
     }
@@ -197,16 +312,19 @@ $(document).ready(function() {
                 request.fail(errore);
                 request.done(function(lob) {
                     console.log(lob);
-                    console.log(lob[0]["Host"]);
                     if(lob.length==0)
                     {
                         let div=$("<div>");
                         div.html("Trova compagni");
                         div.prop("id","btntrovaCompagni");
+                        div.prop("class","divDinamico");
+                        div.prop("style","display:inline-block;width:49%;text-align:center;font-size:1.5em;margin-right:2%;");
                         wrapper.append(div);
                         div=$("<div>");
                         div.html("Richiedi compagni");
                         div.prop("id","btnRichiediCompagni");
+                        div.prop("class","divDinamico");
+                        div.prop("style","display:inline-block;width:49%;text-align:center;font-size:1.5em");
                         wrapper.append(div);
 
                         divRichiesta=$("<div>");
@@ -250,6 +368,7 @@ $(document).ready(function() {
                         div=$("<div>");
                         div.html("Invia");
                         div.prop("id","btnInvia");
+                        divRichiesta.prop("class","divDinamico");
                         divRichiesta.append(div);
                         divRichiesta.hide();
 
@@ -261,6 +380,7 @@ $(document).ready(function() {
                             divLobby=$("<div>");
                             divLobby.prop("id","divLobby");
                             divLobby.html();
+                            divLobby.prop("class","divDinamico");
                             wrapper.append(divLobby);
 
                             let div=$("<div>");
@@ -353,6 +473,7 @@ $(document).ready(function() {
                                 div.html(user.html());
                                 div.prop("id","btnLobby-"+0);
                                 divLobby.append(div);
+                                divLobby.prop("class","divDinamico");
     
                                 for(let i=0;i<lobby.length;i++)
                                 {
@@ -423,9 +544,10 @@ $(document).ready(function() {
                 for(let i=0;i<data.length;i++)
                 {
                     let divRich=$("<div>");
+                    divRich.prop("class","divDinamico");
                     divRichieste.append(divRich);
                     let div=$("<div>");
-                    div.html(data[i]["Username"]+": Cerco "+data[i]["Giocatori"]+" Giocatori("+data[i]["Descrizione"]+" "+data[i]["Piattaforma"]+")");
+                    div.html(data[i]["Username"]+": Cerco "+data[i]["Giocatori"]+" Giocatori ("+data[i]["Descrizione"]+" "+data[i]["Piattaforma"]+")");
                     div.prop("id","btnRich"+i);
                     divRich.append(div);
                     div=$("<div>");
@@ -466,6 +588,7 @@ $(document).ready(function() {
                     div.html("Annulla richiesta");
                     div.prop("id","annullaRichiesta");
                     divLobby.append(div);
+                    divLobby.prop("class","divDinamico");
                     
                 }
                 else
@@ -485,6 +608,7 @@ $(document).ready(function() {
                         div.html(user.html());
                         div.prop("id","btnLobby-"+0);
                         divLobby.append(div);
+                        divLobby.prop("class","divDinamico");
 
                         for(let i=0;i<lobby.length;i++)
                         {
@@ -532,16 +656,20 @@ $(document).ready(function() {
                     let div=$("<div>");
                     div.html("Trova compagni");
                     div.prop("id","btntrovaCompagni");
+                    div.prop("class","divDinamico")
+                    div.prop("style","display:inline-block;width:49%;text-align:center;font-size:1.5em;margin-right:2%;");
                     wrapper.append(div);
                     div=$("<div>");
                     div.html("Richiedi compagni");
                     div.prop("id","btnRichiediCompagni");
+                    div.prop("class","divDinamico")
+                    div.prop("style","display:inline-block;width:49%;text-align:center;font-size:1.5em");
                     wrapper.append(div);
 
-                    if(divRichiesta=="")
-                    {
-                        let divRichiesta=$("<div>");
+                    $(divRichiesta).remove();
+                        divRichiesta=$("<div>");
                         divRichiesta.prop("id","divRichiesta");
+                        divRichiesta.prop("class","divDinamico");
                         divRichiesta.html();
                         wrapper.append(divRichiesta);
         
@@ -583,7 +711,6 @@ $(document).ready(function() {
                         div.prop("id","btnInvia");
                         divRichiesta.append(div);
                         divRichiesta.hide();
-                    }
                 });
             }
         }
@@ -599,16 +726,20 @@ $(document).ready(function() {
                     let div=$("<div>");
                     div.html("Trova compagni");
                     div.prop("id","btntrovaCompagni");
+                    div.prop("class","divDinamico")
+                    div.prop("style","display:inline-block;width:49%;text-align:center;font-size:1.5em;margin-right:2%;");
                     wrapper.append(div);
                     div=$("<div>");
                     div.html("Richiedi compagni");
                     div.prop("id","btnRichiediCompagni");
+                    div.prop("class","divDinamico")
+                    div.prop("style","display:inline-block;width:49%;text-align:center;font-size:1.5em");
                     wrapper.append(div);
 
-                    if(divRichiesta=="")
-                    {
+                    $(divRichiesta).remove();
                         divRichiesta=$("<div>");
                         divRichiesta.prop("id","divRichiesta");
+                        divRichiesta.prop("class","divDinamico");
                         divRichiesta.html();
                         wrapper.append(divRichiesta);
         
@@ -650,8 +781,7 @@ $(document).ready(function() {
                         div.prop("id","btnInvia");
                         divRichiesta.append(div);
                         divRichiesta.hide();
-                    }
-
+                
                 });
             }
         }
@@ -677,6 +807,7 @@ wrapper.on("click","div div div",function(){
                     divLobby.prop("id","divLobby");
                     divLobby.html();
                     wrapper.append(divLobby);
+                    //divLobby.prop("class","divDinamico");
 
                     let div=$("<div>");
                     div.html("Esci dalla lobby");
@@ -699,6 +830,7 @@ wrapper.on("click","div div div",function(){
                         div.html(richieste[index]["Username"]);
                         div.prop("id","btnLobby-"+0);
                         divLobby.append(div);
+                        divLobby.prop("class","divDinamico");
 
                         for(let i=0;i<lobby.length;i++)
                         {
@@ -735,6 +867,64 @@ wrapper.on("click","div div div",function(){
         });
     }
 });
+
+$("#btnInviaMessaggio").on("click",function(){
+    if(mod=="Forum")
+    {
+        let divMessaggio=$("<div>");
+        let div=$("<div>");
+        div.html($("#txtMessage").val());
+        divMessaggio.append(div);
+        div=$("<div>");
+        let date= new Date();
+        div.html(user.html()+" "+date.getDate()+"/"+date.getMonth()+1+"/"+date.getFullYear()+" "+date.getHours()+":"+date.getMinutes());
+        divMessaggio.append(div);
+        wrapper.append(divMessaggio);
+        let request=inviaRichiesta("get","/api/addForum","par="+div.html().split(' ')[1]+";"+div.html().split(' ')[2]+";"+$("#txtMessage").val());
+        request.fail(errore);
+        request.done(function(data) {
+            $("#txtMessage").val("");
+        });
+    }
+    else if(mod=="Esports")
+    {
+        let divNotizia=$("<div>");
+        let div=$("<div>");
+        let date= new Date();
+        let aus=($("#txtMessage").val().replaceAll(".","<br>"))+"<br>"+date.getDate()+"/"+date.getMonth()+1+"/"+date.getFullYear()+" "+date.getHours()+":"+date.getMinutes();
+        div.html(aus);
+        divNotizia.append(div);
+        divNotizia.prop("class","divDinamico");
+        wrapper.append(divNotizia);
+        let dateStr=date.getDate()+"/"+date.getMonth()+1+"/"+date.getFullYear()+" "+date.getHours()+":"+date.getMinutes()
+        let request=inviaRichiesta("get","/api/addEsports","par="+dateStr.split(' ')[0]+";"+dateStr.split(' ')[1]+";"+$("#txtMessage").val());
+        request.fail(errore);
+        request.done(function(data) {
+            $("#txtMessage").val("");
+        });
+    }
+    else if(mod=="News")
+    {
+        let divNotizia=$("<div>");
+        let div=$("<div>");
+        div.html($("#txtMessage").val());
+        divNotizia.append(div);
+        div=$("<div>");
+        let date= new Date();
+        div.html(date.getDate()+"/"+date.getMonth()+1+"/"+date.getFullYear()+" "+date.getHours()+":"+date.getMinutes());
+        divNotizia.append(div);
+        divNotizia.prop("class","divDinamico");
+        wrapper.append(divNotizia);
+        let request=inviaRichiesta("get","/api/addNews","par="+div.html().split(' ')[0]+";"+div.html().split(' ')[1]+";"+$("#txtMessage").val());
+        request.fail(errore);
+        request.done(function(data) {
+            $("#txtMessage").val("");
+        });
+    }
+    
+});
+
+
 });
 
 
