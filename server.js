@@ -10,7 +10,7 @@ let async=require("async");
 const { json } = require("body-parser");
 let mongoClient=mongo.MongoClient;
 const ObjectId=mongo.ObjectID;
-const CONNECTIONSTRING=process.env.MONGODB_URI || "mongodb://lucacastelli:Felix2012@cluster0-shard-00-00.f6esz.mongodb.net:27017,cluster0-shard-00-01.f6esz.mongodb.net:27017,cluster0-shard-00-02.f6esz.mongodb.net:27017/test?replicaSet=atlas-1477sw-shard-0&ssl=true&authSource=admin";
+const CONNECTIONSTRING = process.env.MONGODB_URI;
 const CONNECTIONOPTIONS={useNewUrlParser: true,useUnifiedTopology:true};
 let currentUser="";
 let currentGame="";
