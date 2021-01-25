@@ -722,6 +722,7 @@ $(document).ready(function() {
                 request.fail(errore);
                 request.done(function(data) {
                     $("#divLobby").hide();
+                    lobby="";
                     clearInterval(intervalLobby);
                     let div=$("<div>");
                     div.html("Trova compagni");
@@ -818,6 +819,10 @@ wrapper.on("click","div div div",function(){
                 {
                     divLobby.show();
                     divLobby.empty();
+                    let div=$("<div>");
+                    div.html("Esci dalla lobby");
+                    div.prop("id","esciLobby");
+                    divLobby.append(div);
                 }
                 let request = inviaRichiesta("get","/api/lobby","user="+richieste[index]["Username"]);
                 request.fail(errore);
